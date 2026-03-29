@@ -7,29 +7,24 @@ st.set_page_config(page_title="PSTC Grievance Dashboard", layout="wide")
 st.title("Punjab State Traders Commission - Grievance Dashboard")
 
 # --- LIVE DATA LOADING FROM GOOGLE SHEETS ---
-@st.cache_data(ttl=600)  # Caches the data for 10 minutes so it doesn't overload Google on every click
+@st.cache_data(ttl=600)  
 def load_data():
-    # The unique ID from your Google Sheets URL
     sheet_id = "1rGwwRllkS30zA6ieOWvGOkSZUWy4BB9ZyGg64VRosUA"
-    # The exact name of the sheet we want to pull
     sheet_name = "DATABASE FOR DASHBOARD"
     
-    # The magic URL that turns a public Google Sheet tab into a live CSV
-    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={sheet_name}"
+    # FIX: Replace spaces with %20 so the URL is valid
+    safe_sheet_name = sheet_name.replace(" ", "%20")
+    
+    # Use the safe_sheet_name in the URL
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={safe_sheet_name}"
     
     try:
-        # Read the live sheet directly into pandas
-        # We try to parse 'Meeting Date' as dates right away
         df = pd.read_csv(url, parse_dates=["Meeting Date"])
-        
-        # Clean up common blank placeholders
         df.replace(['Nill', 'NILL', 'nill', 'Nil', 'nil'], pd.NA, inplace=True)
-        
         return df
-    
     except Exception as e:
         st.error(f"Failed to load data from Google Sheets. Error: {e}")
-        return pd.DataFrame() # Return empty dataframe on fail so app doesn't crash
+        return pd.DataFrame()
 
 # Load the data
 df = load_data()
