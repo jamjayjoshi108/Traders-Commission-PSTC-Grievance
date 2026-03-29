@@ -42,7 +42,7 @@ df['Meeting_ID'] = df['District'].astype(str) + "_" + \
                    df['Meeting Date'].astype(str)
 
 # --- DASHBOARD TABS ---
-tab1, tab2, tab3 = st.tabs(["Tier 1: Apex View (State)", "Tier 2: Meso View (District)", "Tier 3: Micro View (Actionable)"])
+tab1, tab2, tab3 = st.tabs(["Apex View (State)", "Meso View (District)", "Micro View (Actionable)"])
 
 # ==========================================
 # TIER 1: THE APEX VIEW (STATE-LEVEL)
@@ -129,9 +129,17 @@ with tab3:
     st.subheader("Actionable Follow-Up List (Pending Grievances)")
     days_old = st.slider("Show pending grievances raised more than X days ago:", 0, 60, 0)
     
-    pending_df = df[df['Resolution Status'].str.contains('Pending', na=False, case=False)].copy()
-    # Calculates age strictly based on the provided Meeting Date vs Today
+    # Fills blank statuses with 'Pending' so they show up on the action list
+    pending_df = df.copy()
+    pending_df['Resolution Status'] = pending_df['Resolution Status'].fillna('Pending')
+    
+    # Now filter for Pending
+    pending_df = pending_df[pending_df['Resolution Status'].str.contains('Pending', case=False)].copy()
+    
+    # Calculate days old
     pending_df['Days Since Meeting'] = (pd.Timestamp.now().normalize() - pending_df['Meeting Date']).dt.days
+    
+    # Apply the slider filter
     action_list = pending_df[pending_df['Days Since Meeting'] >= days_old]
     
     st.dataframe(action_list[['District', 'Name of Person', 'Mobile No.', 'Department', 'Grievance Details', 'Days Since Meeting']], use_container_width=True)
