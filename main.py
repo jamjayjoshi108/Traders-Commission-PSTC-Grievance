@@ -16,12 +16,18 @@ def load_data():
     url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/gviz/tq?tqx=out:csv&sheet={safe_sheet_name}"
     
     try:
-        df = pd.read_csv(url, parse_dates=["Meeting Date"], dayfirst=True)
+        # Load without relying solely on parse_dates
+        df = pd.read_csv(url)
         df.replace(['Nill', 'NILL', 'nill', 'Nil', 'nil'], pd.NA, inplace=True)
+        
+        # FIX: Force the column to be datetime. 
+        # errors='coerce' turns any unreadable text/blanks into NaT (Not a Time) instead of crashing.
+        df['Meeting Date'] = pd.to_datetime(df['Meeting Date'], errors='coerce', dayfirst=True)
+        
         return df
     except Exception as e:
         st.error(f"Failed to load data from Google Sheets. Error: {e}")
-        return pd.DataFrame() 
+        return pd.DataFrame()
 
 df = load_data()
 
