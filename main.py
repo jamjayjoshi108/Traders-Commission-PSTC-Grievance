@@ -126,10 +126,9 @@ with tab2:
 with tab3:
     st.header("Granular & Actionable Insights")
     
-    st.subheader("Actionable Follow-Up List (Pending Grievances)")
-    days_old = st.slider("Show pending grievances raised more than X days ago:", 0, 60, 0)
+    st.subheader("30-Day Resolution Countdown (Pending Grievances)")
     
-    # Fills blank statuses with 'Pending' so they show up on the action list
+    # Get all pending (or blank) statuses
     pending_df = df.copy()
     pending_df['Resolution Status'] = pending_df['Resolution Status'].fillna('Pending')
     
