@@ -133,15 +133,27 @@ with tab3:
     pending_df['Resolution Status'] = pending_df['Resolution Status'].fillna('Pending')
     
     # Now filter for Pending
-    pending_df = pending_df[pending_df['Resolution Status'].str.contains('Pending', case=False)].copy()
+    pending_df = pending_df[pending_df['Resolution Status'].str.contains('Pending', case=False, na=False)].copy()
     
-    # Calculate days old
+    # Calculate days old AND Days Remaining (30-day SLA)
     pending_df['Days Since Meeting'] = (pd.Timestamp.now().normalize() - pending_df['Meeting Date']).dt.days
+    pending_df['Days Remaining'] = 30 - pending_df['Days Since Meeting']
     
-    # Apply the slider filter
-    action_list = pending_df[pending_df['Days Since Meeting'] >= days_old]
+    # Sort so the most urgent (lowest or negative days remaining) appear at the absolute top
+    pending_df = pending_df.sort_values('Days Remaining', ascending=True)
     
-    st.dataframe(action_list[['District', 'Name of Person', 'Mobile No.', 'Department', 'Grievance Details', 'Days Since Meeting']], use_container_width=True)
+    # Define the columns we want to show
+    display_cols = ['District', 'Name of Person', 'Mobile No.', 'Department', 'Meeting Date', 'Days Remaining', 'Grievance Details']
+    
+    # Filter widget to toggle between All Pending and strictly Overdue
+    filter_option = st.radio("Filter List:", ["All Pending", "Overdue (0 or fewer days remaining)"], horizontal=True)
+    
+    if filter_option == "Overdue (0 or fewer days remaining)":
+        display_df = pending_df[pending_df['Days Remaining'] <= 0]
+    else:
+        display_df = pending_df
+
+    st.dataframe(display_df[display_cols], use_container_width=True)
 
     st.divider()
     
