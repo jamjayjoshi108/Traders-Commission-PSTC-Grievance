@@ -42,7 +42,7 @@ st.title("Punjab State Traders Commission - Grievance Dashboard")
 # -----------------------------------------------------------------------------
 # 2. LIVE DATA LOADING FROM GOOGLE SHEETS
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=6)  
+@st.cache_data(ttl=60)  
 def load_data():
     sheet_id = "1rGwwRllkS30zA6ieOWvGOkSZUWy4BB9ZyGg64VRosUA"
     sheet_name = "DATABASE FOR DASHBOARD"
@@ -112,9 +112,22 @@ with tab1:
     with col_chart1:
         with st.container(border=True):
             st.markdown("📊 **State-Wide Resolution Rate**")
-            res_counts = df['Resolution Status'].value_counts().reset_index()
+            
+            # 1. Create a function to force messy text into strict binary buckets
+            def standardize_status(val):
+                val_str = str(val).lower()
+                # If it contains "resolv", "done", or Punjabi completion words (like ਕੀਤੀ or ਹੱਲ) -> Resolved
+                if 'resolv' in val_str or 'done' in val_str or 'ਕੀਤੀ' in val_str or 'ਹੱਲ' in val_str:
+                    return 'Resolved'
+                # Treat blanks, "pending", or any other random text as Pending
+                return 'Pending'
+            
+            # 2. Apply the cleanup logic just for this chart
+            clean_status_series = df['Resolution Status'].apply(standardize_status)
+            res_counts = clean_status_series.value_counts().reset_index()
             res_counts.columns = ['Status', 'Count']
-            # Adapted to use the custom Navy and Yellow colors
+            
+            # 3. Draw the chart with strict AAP colors
             fig_pie = px.pie(res_counts, values='Count', names='Status', hole=0.4, 
                              color='Status', color_discrete_map={'Resolved':'#0066A4', 'Pending':'#F2B200'})
             fig_pie.update_layout(margin=dict(t=20, b=20, l=10, r=10), showlegend=True, legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5))
