@@ -135,9 +135,25 @@ with tab1:
 
     with col_chart2:
         with st.container(border=True):
-            st.markdown("🏢 **Grievances by Department**")
-            dept_counts = df['Department'].value_counts().reset_index()
+            st.markdown("🏢 **Top 10 Grievances by Department**")
+            
+            # 1. Standardize the text (removes spaces, forces Title Case to group duplicates)
+            clean_dept = df['Department'].dropna().astype(str).str.strip().str.title()
+            
+            # (Optional) Fix specific acronyms that .title() might make look weird
+            clean_dept = clean_dept.replace({
+                'Pspcl': 'PSPCL',
+                'Sdm Office': 'SDM Office',
+                'Bdpo': 'BDPO',
+                'Fci Department': 'FCI Department',
+                'Gst Department': 'GST Department'
+            })
+            
+            # 2. Get counts and strictly limit to the Top 10 largest
+            dept_counts = clean_dept.value_counts().nlargest(10).reset_index()
             dept_counts.columns = ['Department', 'Count']
+            
+            # 3. Draw the clean chart
             fig_dept = px.bar(dept_counts, x='Count', y='Department', orientation='h')
             fig_dept.update_traces(marker_color='#0066A4')
             fig_dept.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(t=20, b=20, l=10, r=10))
