@@ -181,3 +181,9 @@ with tab3:
         theme_df = df[df['Grievance Details'].str.contains(search_term, na=False, case=False)]
         st.write(f"Found **{len(theme_df)}** records mentioning '{search_term}'")
         st.dataframe(theme_df[['District', 'Venue / Bazaar', 'Department', 'Grievance Details', 'Resolution Status']], use_container_width=True)
+
+
+# -----------------------------------------------------------------------------
+# 7. FOOTER
+# -----------------------------------------------------------------------------
+st.markdown('<div class="minute-footer">made with ❤️ by Jay Joshi</div>', unsafe_allow_html=True)
