@@ -137,10 +137,21 @@ with tab1:
         with st.container(border=True):
             st.markdown("🏢 **Top 10 Grievances by Department**")
             
-            # 1. Standardize the text (removes spaces, forces Title Case to group duplicates)
-            clean_dept = df['Department'].dropna().astype(str).str.strip().str.title()
+            # 1. Smart Merge: If 'Any other...', use the actual typed name
+            def get_real_dept(row):
+                dept = str(row['Department']).strip()
+                other = str(row['Other Dept. Name']).strip()
+                # If they selected 'Any other' and actually typed a name, use the typed name
+                if 'any other' in dept.lower() and other.lower() not in ['nan', 'none', '', 'nill', 'nil']:
+                    return other
+                return dept
+                
+            real_dept_series = df.apply(get_real_dept, axis=1)
             
-            # (Optional) Fix specific acronyms that .title() might make look weird
+            # 2. Standardize the text (removes spaces, forces Title Case)
+            clean_dept = real_dept_series.astype(str).str.strip().str.title()
+            
+            # Fix specific acronyms
             clean_dept = clean_dept.replace({
                 'Pspcl': 'PSPCL',
                 'Sdm Office': 'SDM Office',
@@ -149,11 +160,16 @@ with tab1:
                 'Gst Department': 'GST Department'
             })
             
-            # 2. Get counts and strictly limit to the Top 10 largest
+            # 3. Filter out any remaining "Any Other Department" entries (where they left the text box blank)
+            clean_dept = clean_dept[~clean_dept.str.contains("Any Other", case=False, na=False)]
+            # Also drop 'Nan' strings that result from empty rows
+            clean_dept = clean_dept[clean_dept != 'Nan']
+
+            # 4. Get counts and strictly limit to the Top 10 largest
             dept_counts = clean_dept.value_counts().nlargest(10).reset_index()
             dept_counts.columns = ['Department', 'Count']
             
-            # 3. Draw the clean chart
+            # 5. Draw the clean chart
             fig_dept = px.bar(dept_counts, x='Count', y='Department', orientation='h')
             fig_dept.update_traces(marker_color='#0066A4')
             fig_dept.update_layout(yaxis={'categoryorder':'total ascending'}, margin=dict(t=20, b=20, l=10, r=10))
