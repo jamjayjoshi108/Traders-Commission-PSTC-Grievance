@@ -42,7 +42,7 @@ st.title("Punjab State Traders Commission - Grievance Dashboard")
 # -----------------------------------------------------------------------------
 # 2. LIVE DATA LOADING FROM GOOGLE SHEETS
 # -----------------------------------------------------------------------------
-@st.cache_data(ttl=600)  
+@st.cache_data(ttl=6)  
 def load_data():
     sheet_id = "1rGwwRllkS30zA6ieOWvGOkSZUWy4BB9ZyGg64VRosUA"
     sheet_name = "DATABASE FOR DASHBOARD"
